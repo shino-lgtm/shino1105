@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase メール・パスワードログイン</title>
+    <title>Firebase メール・パスワードログイン（完全版）</title>
     <style>
         /* ちょっとだけ見やすくするためのCSS */
         body {
@@ -15,6 +15,7 @@
             min-height: 100vh;
             margin: 0;
             background-color: #f4f4f4;
+            color: #333;
         }
         div {
             background-color: white;
@@ -22,14 +23,21 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
+            max-width: 350px;
+            width: 90%;
+        }
+        h1 {
+            color: #222;
+            margin-bottom: 25px;
         }
         input {
             display: block;
-            width: 250px;
+            width: calc(100% - 22px); /* Padding and border included */
             padding: 10px;
             margin: 10px auto;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 16px;
         }
         button {
             padding: 10px 20px;
@@ -38,20 +46,21 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.2s ease;
         }
         #signupButton { background-color: #4CAF50; color: white; }
+        #signupButton:hover:not(:disabled) { background-color: #45a049; }
         #loginButton { background-color: #008CBA; color: white; }
+        #loginButton:hover:not(:disabled) { background-color: #007bb5; }
         #logoutButton { background-color: #f44336; color: white; }
+        #logoutButton:hover:not(:disabled) { background-color: #da190b; }
         #message {
             margin-top: 20px;
             font-weight: bold;
             color: #333;
+            min-height: 20px; /* Placeholder for message */
         }
-        #logoutButton:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        #signupButton:disabled, #loginButton:disabled {
+        button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
@@ -71,10 +80,119 @@
         <p id="message">ログインしていません。</p>
     </div>
 
-    <!-- ここが重要です！ -->
-    <!-- main.js をモジュールとして読み込みます。 -->
-    <!-- これにより、main.js の中で import/export が使えるようになります。 -->
-    <script type="module" src="./main.js"></script>
+    <!-- ここに、FirebaseのSDKと、すべてのJavaScriptロジックを記述します。 -->
+    <!-- type="module" を使うことで、現代的な import/export 構文がブラウザで直接使えます。 -->
+    <script type="module">
+        // --- Firebase SDKのインポート（CDNから直接読み込みます） ---
+        // Firebaseアプリのコア機能をインポート
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        // Firebase Authenticationの必要な機能をまとめてインポート
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+        // --- あなたのウェブアプリのFirebase設定 ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
+            authDomain: "november5th-a1336.firebaseapp.com",
+            projectId: "november5th-a1336",
+            storageBucket: "november5th-a1336.firebasestorage.app",
+            messagingSenderId: "11537951889",
+            appId: "1:11537951889:web:d783b2298fc90f88a3a330"
+        };
+
+        // --- Firebaseアプリの初期化 ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app); // 認証サービスへの参照を取得
+
+        // --- HTML要素の取得 ---
+        const emailInput = document.getElementById("emailInput");
+        const passwordInput = document.getElementById("passwordInput");
+        const signupButton = document.getElementById("signupButton");
+        const loginButton = document.getElementById("loginButton");
+        const logoutButton = document.getElementById("logoutButton");
+        const messageParagraph = document.getElementById("message");
+
+        // --- イベントリスナーと認証ロジック ---
+
+        // 新規登録ボタンがクリックされたら
+        signupButton.addEventListener("click", async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                messageParagraph.textContent = "メールアドレスとパスワードを入力してください。";
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                messageParagraph.textContent = `新規登録成功！メール: ${userCredential.user.email}`;
+                console.log("新規登録ユーザー:", userCredential.user);
+            } catch (error) {
+                messageParagraph.textContent = `新規登録エラー: ${error.message}`;
+                console.error("新規登録エラー:", error);
+            }
+        });
+
+        // ログインボタンがクリックされたら
+        loginButton.addEventListener("click", async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                messageParagraph.textContent = "メールアドレスとパスワードを入力してください。";
+                return;
+            }
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                messageParagraph.textContent = `ログイン成功！メール: ${userCredential.user.email}`;
+                console.log("ログインユーザー:", userCredential.user);
+            } catch (error) {
+                messageParagraph.textContent = `ログインエラー: ${error.message}`;
+                console.error("ログインエラー:", error);
+            }
+        });
+
+        // ログアウトボタンがクリックされたら
+        logoutButton.addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                messageParagraph.textContent = "ログアウトしました。";
+            } catch (error) {
+                messageParagraph.textContent = `ログアウトエラー: ${error.message}`;
+                console.error("ログアウトエラー:", error);
+            }
+        });
+
+        // ユーザーのログイン状態が変化したときに実行される関数
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // ユーザーがログインしている場合
+                emailInput.value = ""; // 入力欄をクリア
+                passwordInput.value = ""; // 入力欄をクリア
+                emailInput.disabled = true;
+                passwordInput.disabled = true;
+                signupButton.disabled = true;
+                loginButton.disabled = true;
+                logoutButton.disabled = false;
+                messageParagraph.textContent = `現在ログイン中: ${user.email}`;
+            } else {
+                // ユーザーがログアウトしている場合
+                emailInput.disabled = false;
+                passwordInput.disabled = false;
+                signupButton.disabled = false;
+                loginButton.disabled = false;
+                logoutButton.disabled = true;
+                messageParagraph.textContent = "ログインしていません。";
+            }
+        });
+
+    </script>
 </body>
 </html>
-
