@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase メール・パスワードログイン（完全版）</title>
+    <title>Firebase メール・パスワードログイン</title>
     <style>
         /* ちょっとだけ見やすくするためのCSS */
         body {
@@ -52,8 +52,6 @@
         #signupButton:hover:not(:disabled) { background-color: #45a049; }
         #loginButton { background-color: #008CBA; color: white; }
         #loginButton:hover:not(:disabled) { background-color: #007bb5; }
-        #logoutButton { background-color: #f44336; color: white; }
-        #logoutButton:hover:not(:disabled) { background-color: #da190b; }
         #message {
             margin-top: 20px;
             font-weight: bold;
@@ -63,6 +61,9 @@
         button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -75,27 +76,23 @@
 
         <button id="signupButton">新規登録</button>
         <button id="loginButton">ログイン</button>
-        <button id="logoutButton" disabled>ログアウト</button>
+        <!-- ログインページではログアウトボタンは不要になったため非表示に -->
+        <button id="logoutButton" class="hidden">ログアウト</button> 
 
         <p id="message">ログインしていません。</p>
     </div>
 
-    <!-- ここに、FirebaseのSDKと、すべてのJavaScriptロジックを記述します。 -->
-    <!-- type="module" を使うことで、現代的な import/export 構文がブラウザで直接使えます。 -->
     <script type="module">
-        // --- Firebase SDKのインポート（CDNから直接読み込みます） ---
-        // Firebaseアプリのコア機能をインポート
+        // Firebase SDKのインポート（CDNから直接読み込みます）
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        // Firebase Authenticationの必要な機能をまとめてインポート
         import {
             getAuth,
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
-            signOut,
             onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-        // --- あなたのウェブアプリのFirebase設定 ---
+        // あなたのウェブアプリのFirebase設定
         const firebaseConfig = {
             apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
             authDomain: "november5th-a1336.firebaseapp.com",
@@ -105,19 +102,16 @@
             appId: "1:11537951889:web:d783b2298fc90f88a3a330"
         };
 
-        // --- Firebaseアプリの初期化 ---
+        // Firebaseアプリの初期化
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app); // 認証サービスへの参照を取得
+        const auth = getAuth(app);
 
-        // --- HTML要素の取得 ---
+        // HTML要素の取得
         const emailInput = document.getElementById("emailInput");
         const passwordInput = document.getElementById("passwordInput");
         const signupButton = document.getElementById("signupButton");
         const loginButton = document.getElementById("loginButton");
-        const logoutButton = document.getElementById("logoutButton");
         const messageParagraph = document.getElementById("message");
-
-        // --- イベントリスナーと認証ロジック ---
 
         // 新規登録ボタンがクリックされたら
         signupButton.addEventListener("click", async () => {
@@ -130,9 +124,9 @@
             }
 
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                messageParagraph.textContent = `新規登録成功！メール: ${userCredential.user.email}`;
-                console.log("新規登録ユーザー:", userCredential.user);
+                await createUserWithEmailAndPassword(auth, email, password);
+                messageParagraph.textContent = "新規登録成功！ダッシュボードへ移動します...";
+                // 成功したら onAuthStateChanged が発火し、リダイレクトされます
             } catch (error) {
                 messageParagraph.textContent = `新規登録エラー: ${error.message}`;
                 console.error("新規登録エラー:", error);
@@ -150,49 +144,29 @@
             }
 
             try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                messageParagraph.textContent = `ログイン成功！メール: ${userCredential.user.email}`;
-                console.log("ログインユーザー:", userCredential.user);
+                await signInWithEmailAndPassword(auth, email, password);
+                messageParagraph.textContent = "ログイン成功！ダッシュボードへ移動します...";
+                // 成功したら onAuthStateChanged が発火し、リダイレクトされます
             } catch (error) {
                 messageParagraph.textContent = `ログインエラー: ${error.message}`;
                 console.error("ログインエラー:", error);
             }
         });
 
-        // ログアウトボタンがクリックされたら
-        logoutButton.addEventListener("click", async () => {
-            try {
-                await signOut(auth);
-                messageParagraph.textContent = "ログアウトしました。";
-            } catch (error) {
-                messageParagraph.textContent = `ログアウトエラー: ${error.message}`;
-                console.error("ログアウトエラー:", error);
-            }
-        });
-
         // ユーザーのログイン状態が変化したときに実行される関数
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // ユーザーがログインしている場合
-                emailInput.value = ""; // 入力欄をクリア
-                passwordInput.value = ""; // 入力欄をクリア
-                emailInput.disabled = true;
-                passwordInput.disabled = true;
-                signupButton.disabled = true;
-                loginButton.disabled = true;
-                logoutButton.disabled = false;
-                messageParagraph.textContent = `現在ログイン中: ${user.email}`;
+                // ユーザーがログインしている場合、ダッシュボードへリダイレクト
+                window.location.href = "dashboard.html";
             } else {
-                // ユーザーがログアウトしている場合
+                // ユーザーがログインしていない場合、ログイン画面の状態を維持
+                messageParagraph.textContent = "ログインしていません。";
                 emailInput.disabled = false;
                 passwordInput.disabled = false;
                 signupButton.disabled = false;
                 loginButton.disabled = false;
-                logoutButton.disabled = true;
-                messageParagraph.textContent = "ログインしていません。";
             }
         });
-
     </script>
 </body>
 </html>
