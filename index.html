@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログインサイト</title>
     <style>
-        /* ちょっとだけ見やすくするためのCSS */
+        /* スタイリング */
         body {
             font-family: sans-serif;
             display: flex;
@@ -47,23 +47,26 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.2s ease;
+            display: block; /* ボタンを縦に並べる */
+            width: calc(100% - 10px); /* 幅を調整 */
+            margin-left: auto;
+            margin-right: auto;
         }
         #signupButton { background-color: #4CAF50; color: white; }
         #signupButton:hover:not(:disabled) { background-color: #45a049; }
         #loginButton { background-color: #008CBA; color: white; }
         #loginButton:hover:not(:disabled) { background-color: #007bb5; }
+        #googleSignInButton { background-color: #DB4437; color: white; margin-top: 20px; } /* Googleボタンのスタイル */
+        #googleSignInButton:hover:not(:disabled) { background-color: #c0392b; }
         #message {
             margin-top: 20px;
             font-weight: bold;
             color: #333;
-            min-height: 20px; /* Placeholder for message */
+            min-height: 20px; /* メッセージ表示用のプレースホルダー */
         }
         button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
-        }
-        .hidden {
-            display: none;
         }
     </style>
 </head>
@@ -76,20 +79,25 @@
 
         <button id="signupButton">新規登録</button>
         <button id="loginButton">ログイン</button>
-        <!-- ログインページではログアウトボタンは不要になったため非表示に -->
-        <button id="logoutButton" class="hidden">ログアウト</button> 
+
+        <p style="margin-top: 20px;">または</p>
+
+        <button id="googleSignInButton">Googleでログイン</button>
 
         <p id="message">ログインしていません。</p>
     </div>
 
     <script type="module">
-        // Firebase SDKのインポート（CDNから直接読み込みます）
+        // Firebase SDKの必要な関数をインポート
+        // v9 SDKはCDN経由でESモジュールとして読み込みます。
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import {
             getAuth,
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
-            onAuthStateChanged
+            onAuthStateChanged,
+            GoogleAuthProvider, // Google ログインに必要なプロバイダ
+            signInWithPopup     // ポップアップでのログインに必要な関数
         } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         // あなたのウェブアプリのFirebase設定
@@ -104,6 +112,7 @@
 
         // Firebaseアプリの初期化
         const app = initializeApp(firebaseConfig);
+        // Firebase Authenticationサービスを取得
         const auth = getAuth(app);
 
         // HTML要素の取得
@@ -111,6 +120,7 @@
         const passwordInput = document.getElementById("passwordInput");
         const signupButton = document.getElementById("signupButton");
         const loginButton = document.getElementById("loginButton");
+        const googleSignInButton = document.getElementById("googleSignInButton");
         const messageParagraph = document.getElementById("message");
 
         // 新規登録ボタンがクリックされたら
@@ -124,9 +134,10 @@
             }
 
             try {
+                // Emailとパスワードで新しいユーザーを作成
                 await createUserWithEmailAndPassword(auth, email, password);
                 messageParagraph.textContent = "新規登録成功！ダッシュボードへ移動します...";
-                // 成功したら onAuthStateChanged が発火し、リダイレクトされます
+                // 成功したら onAuthStateChanged が発火し、ダッシュボードへリダイレクトされます
             } catch (error) {
                 messageParagraph.textContent = `新規登録エラー: ${error.message}`;
                 console.error("新規登録エラー:", error);
@@ -144,16 +155,30 @@
             }
 
             try {
+                // Emailとパスワードでユーザーをサインイン
                 await signInWithEmailAndPassword(auth, email, password);
                 messageParagraph.textContent = "ログイン成功！ダッシュボードへ移動します...";
-                // 成功したら onAuthStateChanged が発火し、リダイレクトされます
+                // 成功したら onAuthStateChanged が発火し、ダッシュボードへリダイレクトされます
             } catch (error) {
                 messageParagraph.textContent = `ログインエラー: ${error.message}`;
                 console.error("ログインエラー:", error);
             }
         });
 
-        // ユーザーのログイン状態が変化したときに実行される関数
+        // Google ログインボタンがクリックされたら
+        googleSignInButton.addEventListener("click", async () => {
+            const provider = new GoogleAuthProvider(); // Google 認証プロバイダをインスタンス化
+            try {
+                // ポップアップでGoogleログインを開始
+                await signInWithPopup(auth, provider);
+                messageParagraph.textContent = "Google ログイン成功！ダッシュボードへ移動します...";
+            } catch (error) {
+                messageParagraph.textContent = `Google ログインエラー: ${error.message}`;
+                console.error("Google ログインエラー:", error);
+            }
+        });
+
+        // ユーザーのログイン状態が変化したときに実行される関数を監視
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // ユーザーがログインしている場合、ダッシュボードへリダイレクト
@@ -161,10 +186,12 @@
             } else {
                 // ユーザーがログインしていない場合、ログイン画面の状態を維持
                 messageParagraph.textContent = "ログインしていません。";
+                // 入力フィールドとボタンを有効にする
                 emailInput.disabled = false;
                 passwordInput.disabled = false;
                 signupButton.disabled = false;
                 loginButton.disabled = false;
+                googleSignInButton.disabled = false;
             }
         });
     </script>
