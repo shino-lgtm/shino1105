@@ -3,66 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ダッシュボード - ログイン後のページ</title>
+    <title>ダッシュボード</title>
     <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #e8f5e9; /* 少し異なる背景色 */
-            color: #333;
-        }
-        div {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        h1 {
-            color: #2e7d32; /* 緑色の見出し */
-            margin-bottom: 25px;
-        }
-        p {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s ease;
-        }
-        #logoutButton { background-color: #f44336; color: white; }
-        #logoutButton:hover:not(:disabled) { background-color: #da190b; }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #e0f7fa; color: #00796b; }
+        h1 { color: #004d40; }
+        button { padding: 10px 20px; background-color: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        button:hover { background-color: #b71c1c; }
     </style>
 </head>
 <body>
-    <div>
-        <h1>ようこそ！</h1>
-        <p id="welcomeMessage">読み込み中...</p>
-        <button id="logoutButton">ログアウト</button>
-    </div>
+    <h1>ようこそ、ダッシュボードへ！</h1>
+    <p>あなたはログインしています。</p>
+    <button id="logoutButton">ログアウト</button>
 
     <script type="module">
-        // Firebase SDKのインポート（CDNから）
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-        // あなたのウェブアプリのFirebase設定
         const firebaseConfig = {
             apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
             authDomain: "november5th-a1336.firebaseapp.com",
@@ -72,36 +29,16 @@
             appId: "1:11537951889:web:d783b2298fc90f88a3a330"
         };
 
-        // Firebaseアプリの初期化
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // HTML要素の取得
-        const welcomeMessage = document.getElementById("welcomeMessage");
         const logoutButton = document.getElementById("logoutButton");
-
-        // ログイン状態の監視
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // ユーザーがログインしている場合
-                welcomeMessage.textContent = `${user.email} さん、こんにちは！`;
-                logoutButton.disabled = false;
-            } else {
-                // ユーザーがログインしていない場合、ログインページへリダイレクト
-                alert("ログインしていません。ログインページに戻ります。");
-                window.location.href = "index.html";
-            }
-        });
-
-        // ログアウトボタンのクリックイベント
         logoutButton.addEventListener("click", async () => {
             try {
                 await signOut(auth);
-                // ログアウト成功後、ログインページへリダイレクト
-                window.location.href = "index.html";
+                window.location.href = "index.html"; // ログアウト後、ログインページに戻る
             } catch (error) {
                 console.error("ログアウトエラー:", error);
-                alert("ログアウトに失敗しました: " + error.message);
             }
         });
     </script>
