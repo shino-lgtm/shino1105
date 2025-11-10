@@ -89,15 +89,14 @@
 
     <script type="module">
         // Firebase SDKの必要な関数をインポート
-        // v9 SDKはCDN経由でESモジュールとして読み込みます。
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import {
             getAuth,
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
             onAuthStateChanged,
-            GoogleAuthProvider, // Google ログインに必要なプロバイダ
-            signInWithPopup     // ポップアップでのログインに必要な関数
+            GoogleAuthProvider,
+            signInWithPopup
         } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         // あなたのウェブアプリのFirebase設定
@@ -123,6 +122,18 @@
         const googleSignInButton = document.getElementById("googleSignInButton");
         const messageParagraph = document.getElementById("message");
 
+        // UIの状態を管理する関数（ボタンの無効化など）
+        function setUiState(isLoading) {
+            emailInput.disabled = isLoading;
+            passwordInput.disabled = isLoading;
+            signupButton.disabled = isLoading;
+            loginButton.disabled = isLoading;
+            googleSignInButton.disabled = isLoading;
+            if (isLoading) {
+                messageParagraph.textContent = "処理中...";
+            }
+        }
+
         // 新規登録ボタンがクリックされたら
         signupButton.addEventListener("click", async () => {
             const email = emailInput.value;
@@ -133,14 +144,29 @@
                 return;
             }
 
+            setUiState(true); // 処理開始時にUIを無効化
             try {
-                // Emailとパスワードで新しいユーザーを作成
                 await createUserWithEmailAndPassword(auth, email, password);
                 messageParagraph.textContent = "新規登録成功！ダッシュボードへ移動します...";
                 // 成功したら onAuthStateChanged が発火し、ダッシュボードへリダイレクトされます
             } catch (error) {
-                messageParagraph.textContent = `新規登録エラー: ${error.message}`;
+                let errorMessage = "新規登録エラー: ";
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage += "このメールアドレスは既に使用されています。";
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage += "メールアドレスの形式が正しくありません。";
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage += "パスワードが弱すぎます（6文字以上推奨）。";
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                messageParagraph.textContent = errorMessage;
                 console.error("新規登録エラー:", error);
+                setUiState(false); // エラー発生時にUIを再度有効化
             }
         });
 
@@ -154,27 +180,59 @@
                 return;
             }
 
+            setUiState(true); // 処理開始時にUIを無効化
             try {
-                // Emailとパスワードでユーザーをサインイン
                 await signInWithEmailAndPassword(auth, email, password);
                 messageParagraph.textContent = "ログイン成功！ダッシュボードへ移動します...";
                 // 成功したら onAuthStateChanged が発火し、ダッシュボードへリダイレクトされます
             } catch (error) {
-                messageParagraph.textContent = `ログインエラー: ${error.message}`;
+                let errorMessage = "ログインエラー: ";
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage += "メールアドレスの形式が正しくありません。";
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage += "このアカウントは無効化されています。";
+                        break;
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        errorMessage += "メールアドレスまたはパスワードが間違っています。";
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                messageParagraph.textContent = errorMessage;
                 console.error("ログインエラー:", error);
+                setUiState(false); // エラー発生時にUIを再度有効化
             }
         });
 
         // Google ログインボタンがクリックされたら
         googleSignInButton.addEventListener("click", async () => {
             const provider = new GoogleAuthProvider(); // Google 認証プロバイダをインスタンス化
+            setUiState(true); // 処理開始時にUIを無効化
             try {
-                // ポップアップでGoogleログインを開始
                 await signInWithPopup(auth, provider);
                 messageParagraph.textContent = "Google ログイン成功！ダッシュボードへ移動します...";
+                // 成功したら onAuthStateChanged が発火し、ダッシュボードへリダイレクトされます
             } catch (error) {
-                messageParagraph.textContent = `Google ログインエラー: ${error.message}`;
+                let errorMessage = "Google ログインエラー: ";
+                switch (error.code) {
+                    case 'auth/popup-closed-by-user':
+                        errorMessage = "Googleログインがキャンセルされました。";
+                        break;
+                    case 'auth/cancelled-popup-request':
+                        errorMessage = "Googleログインのポップアップリクエストがキャンセルされました。";
+                        break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage += "Google認証が無効になっています。Firebaseコンソールで有効にしてください。";
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                messageParagraph.textContent = errorMessage;
                 console.error("Google ログインエラー:", error);
+                setUiState(false); // エラー発生時にUIを再度有効化
             }
         });
 
@@ -182,16 +240,14 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // ユーザーがログインしている場合、ダッシュボードへリダイレクト
-                window.location.href = "dashboard.html";
+                messageParagraph.textContent = `ログイン済み: ${user.email} さん。ダッシュボードへ移動します...`;
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1500); // 1.5秒後にリダイレクト
             } else {
                 // ユーザーがログインしていない場合、ログイン画面の状態を維持
                 messageParagraph.textContent = "ログインしていません。";
-                // 入力フィールドとボタンを有効にする
-                emailInput.disabled = false;
-                passwordInput.disabled = false;
-                signupButton.disabled = false;
-                loginButton.disabled = false;
-                googleSignInButton.disabled = false;
+                setUiState(false); // UIを有効化
             }
         });
     </script>
