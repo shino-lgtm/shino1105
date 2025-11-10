@@ -137,17 +137,19 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         
-        // あなたのウェブアプリのFirebase設定
-        // ご提供いただいたプロジェクト「goto6234」の情報を基にしています。
+        // ====================================================================================
+        // !!! ここをFirebase Consoleでコピーしたあなたの「shino-app」のfirebaseConfigに置き換えてください !!!
+        // ====================================================================================
         const firebaseConfig = {
-            apiKey: "AIzaSyDt69H-dBGMB4HANbwVj007vJ3yblEZdqE", 
-            authDomain: "goto6234.firebaseapp.com",
-            projectId: "goto6234",
-            storageBucket: "goto6234.firebasestorage.app",
-            messagingSenderId: "730149609843",
-            appId: "1:730149609843:web:d11237de52723fc45b2506",
-            measurementId: "G-FDRB7H8MRR"
+            apiKey: "YOUR_API_KEY", // 例: AIzaSyDt69H-dBGMB4HANbwVj007vJ3yblEZdqE
+            authDomain: "YOUR_AUTH_DOMAIN", // 例: goto6234.firebaseapp.com
+            projectId: "YOUR_PROJECT_ID", // 例: goto6234
+            storageBucket: "YOUR_STORAGE_BUCKET", // 例: goto6234.appspot.com
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // 例: 730149609843
+            appId: "YOUR_APP_ID", // 例: 1:730149609843:web:xxxxxxxxxxxxxxxxx (shino-app固有の値)
+            measurementId: "YOUR_MEASUREMENT_ID" // 例: G-FDRB7H8MRR (Google Analyticsを使用する場合)
         };
+        // ====================================================================================
 
         // Firebaseの初期化
         const app = initializeApp(firebaseConfig);
