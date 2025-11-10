@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マイページ</title>
+    <style>
+        /* 基本的なスタイリング */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #e0f7fa;
+            color: #00796b;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            color: #004d40;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        p {
+            margin: 10px 0;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        strong {
+            color: #004d40;
+        }
+        button {
+            padding: 12px 30px;
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 30px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background-color: #b71c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .loading-message {
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ようこそ、マイページへ！</h1>
+        <p id="welcomeMessage" class="loading-message">ユーザー情報を読み込み中...</p>
+        <p id="userEmail"></p>
+        <p id="userName"></p>
+        <p id="userUid"></p>
+        <button id="logoutButton">ログアウト</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+        // あなたのウェブアプリのFirebase設定
+        // ご提供いただいたプロジェクト「goto6234」の情報を基にしています。
+        const firebaseConfig = {
+            apiKey: "AIzaSyDt69H-dBGMB4HANbwVj007vJ3yblEZdqE", 
+            authDomain: "goto6234.firebaseapp.com",
+            projectId: "goto6234",
+            storageBucket: "goto6234.firebasestorage.app",
+            messagingSenderId: "730149609843",
+            appId: "1:730149609843:web:d11237de52723fc45b2506",
+            measurementId: "G-FDRB7H8MRR"
+        };
+
+        // Firebaseの初期化
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // HTML要素への参照を取得
+        const welcomeMessageElement = document.getElementById("welcomeMessage");
+        const userEmailElement = document.getElementById("userEmail");
+        const userNameElement = document.getElementById("userName");
+        const userUidElement = document.getElementById("userUid");
+        const logoutButton = document.getElementById("logoutButton");
+
+        // ログアウトボタンのイベントリスナー
+        logoutButton.addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                // ログアウト成功後、index.htmlへリダイレクト
+                window.location.href = "index.html";
+            } catch (error) {
+                console.error("ログアウトエラー:", error);
+                alert("ログアウトに失敗しました: " + error.message);
+            }
+        });
+
+        // 認証状態の変更を監視し、ユーザー情報を表示またはリダイレクト
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // ユーザーがログインしている場合
+                welcomeMessageElement.textContent = `こんにちは、${user.displayName || user.email.split('@')[0]} さん！`;
+                userEmailElement.innerHTML = `<strong>メールアドレス:</strong> ${user.email}`;
+                userNameElement.innerHTML = `<strong>表示名:</strong> ${user.displayName || "なし"}`;
+                userUidElement.innerHTML = `<strong>ユーザーID (UID):</strong> ${user.uid}`;
+            } else {
+                // ユーザーがログインしていない場合、ログインページへリダイレクト
+                welcomeMessageElement.textContent = "未認証ユーザーです。ログインページへ移動します...";
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 1500);
+            }
+        });
+    </script>
+</body>
+</html>
