@@ -138,16 +138,17 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         
         // ====================================================================================
-        // !!! ここをFirebase Consoleでコピーしたあなたの「shino-app」のfirebaseConfigに置き換えてください !!!
+        // !!! --- ここをFirebase Consoleからコピーしたあなたの「shino-app」の設定に置き換えてください --- !!!
+        // !!! --- YOUR_API_KEY, YOUR_STORAGE_BUCKET, YOUR_APP_ID の3箇所を修正するだけです --- !!!
         // ====================================================================================
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", // 例: AIzaSyDt69H-dBGMB4HANbwVj007vJ3yblEZdqE
-            authDomain: "YOUR_AUTH_DOMAIN", // 例: goto6234.firebaseapp.com
-            projectId: "YOUR_PROJECT_ID", // 例: goto6234
-            storageBucket: "YOUR_STORAGE_BUCKET", // 例: goto6234.appspot.com
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // 例: 730149609843
-            appId: "YOUR_APP_ID", // 例: 1:730149609843:web:xxxxxxxxxxxxxxxxx (shino-app固有の値)
-            measurementId: "YOUR_MEASUREMENT_ID" // 例: G-FDRB7H8MRR (Google Analyticsを使用する場合)
+            apiKey: "YOUR_API_KEY", // <-- Firebase Consoleからコピーして貼り付けてください (例: AIzaSyDt69H-dBGMB4HANbwVj007vJ3yblEZdqE)
+            authDomain: "goto6234.firebaseapp.com",
+            projectId: "goto6234",
+            storageBucket: "YOUR_STORAGE_BUCKET", // <-- Firebase Consoleからコピーして貼り付けてください (例: goto6234.appspot.com)
+            messagingSenderId: "730149609843",
+            appId: "YOUR_APP_ID", // <-- Firebase Consoleからコピーして貼り付けてください (例: 1:730149609843:web:xxxxxxxxxxxxxxxxx)
+            measurementId: "G-FDRB7H8MRR"
         };
         // ====================================================================================
 
@@ -186,7 +187,6 @@
             if (user) {
                 // ログイン済みの場合：マイページへリダイレクト
                 setUiState(true, 'ログイン済み。マイページへ移動します...');
-                // onAuthStateChangedは初期ロード時にも発火するため、短時間の遅延を入れることでUIの更新をユーザーに伝える
                 setTimeout(() => {
                     window.location.href = 'mypage.html';
                 }, 1500); 
@@ -202,7 +202,6 @@
             setUiState(true, 'Google認証中...');
             try {
                 await signInWithPopup(auth, googleProvider);
-                // 成功後、onAuthStateChanged が検知してリダイレクト
             } catch (error) {
                 let displayMessage = "Googleログインに失敗しました: ";
                 switch (error.code) {
@@ -217,6 +216,9 @@
                         break;
                     case 'auth/operation-not-allowed':
                         displayMessage = "FirebaseコンソールでGoogle認証を有効にしてください。";
+                        break;
+                    case 'auth/network-request-failed':
+                        displayMessage = "ネットワーク接続の問題により失敗しました。";
                         break;
                     default:
                         displayMessage += error.message;
@@ -239,7 +241,6 @@
             setUiState(true, 'アカウント作成中...');
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
-                // 成功後、onAuthStateChanged が検知してリダイレクト
             } catch (error) {
                 let displayMessage = "Emailサインアップに失敗しました: ";
                 switch (error.code) {
@@ -254,6 +255,9 @@
                         break;
                     case 'auth/operation-not-allowed':
                         displayMessage = "Firebaseコンソールでメール/パスワード認証を有効にしてください。";
+                        break;
+                    case 'auth/network-request-failed':
+                        displayMessage = "ネットワーク接続の問題により失敗しました。";
                         break;
                     default:
                         displayMessage += error.message;
@@ -276,7 +280,6 @@
             setUiState(true, 'ログイン中...');
             try {
                 await signInWithEmailAndPassword(auth, email, password);
-                // 成功後、onAuthStateChanged が検知してリダイレクト
             } catch (error) {
                 let displayMessage = "Emailログインに失敗しました: ";
                 switch (error.code) {
@@ -292,6 +295,9 @@
                         break;
                     case 'auth/operation-not-allowed':
                         displayMessage = "Firebaseコンソールでメール/パスワード認証を有効にしてください。";
+                        break;
+                    case 'auth/network-request-failed':
+                        displayMessage = "ネットワーク接続の問題により失敗しました。";
                         break;
                     default:
                         displayMessage += error.message;
