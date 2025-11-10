@@ -7,18 +7,21 @@
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #e0f7fa; color: #00796b; }
         h1 { color: #004d40; }
+        p { margin: 5px 0; }
         button { padding: 10px 20px; background-color: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px; }
         button:hover { background-color: #b71c1c; }
     </style>
 </head>
 <body>
     <h1>ようこそ、ダッシュボードへ！</h1>
-    <p>あなたはログインしています。</p>
+    <p id="welcomeMessage">読み込み中...</p>
+    <p id="userEmail"></p>
+    <p id="userUid"></p> <!-- ユーザーUID表示用の要素を追加 -->
     <button id="logoutButton">ログアウト</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
@@ -32,13 +35,33 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
+        const welcomeMessageElement = document.getElementById("welcomeMessage");
+        const userEmailElement = document.getElementById("userEmail");
+        const userUidElement = document.getElementById("userUid"); // 新しいUID表示要素
         const logoutButton = document.getElementById("logoutButton");
+
+        // ログアウトボタンのイベントリスナー
         logoutButton.addEventListener("click", async () => {
             try {
                 await signOut(auth);
-                window.location.href = "index.html"; // ログアウト後、ログインページに戻る
+                // ログアウト成功後、index.htmlへリダイレクト
+                window.location.href = "index.html";
             } catch (error) {
                 console.error("ログアウトエラー:", error);
+                alert("ログアウトに失敗しました。");
+            }
+        });
+
+        // 認証状態の変更を監視し、ユーザー情報を表示またはリダイレクト
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // ユーザーがログインしている場合
+                welcomeMessageElement.textContent = `こんにちは、${user.displayName || user.email} さん！`;
+                userEmailElement.textContent = `ログイン中のメールアドレス: ${user.email}`;
+                userUidElement.textContent = `ユーザーID (UID): ${user.uid}`; // UIDを表示
+            } else {
+                // ユーザーがログインしていない場合、ログインページへリダイレクト
+                window.location.href = "index.html";
             }
         });
     </script>
