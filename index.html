@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログインしてください</title>
     <style>
-        /* 基本的なスタイリング */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
@@ -42,13 +41,13 @@
         input[type="email"],
         input[type="password"] {
             display: block;
-            width: calc(100% - 24px); /* パディングとボーダーを考慮 */
+            width: calc(100% - 24px);
             padding: 12px;
             margin: 10px auto;
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 1em;
-            box-sizing: border-box; /* パディングとボーダーを幅に含める */
+            box-sizing: border-box;
         }
         button {
             padding: 12px 25px;
@@ -60,7 +59,7 @@
             transition: background-color 0.3s ease, transform 0.2s ease;
             width: 100%;
             box-sizing: border-box;
-            display: block; /* ボタンを縦に並べる */
+            display: block;
         }
         button:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -72,8 +71,6 @@
             transform: none;
             box-shadow: none;
         }
-
-        /* 個別ボタンのスタイリング */
         #google-login-btn {
             background-color: #db4437;
             color: white;
@@ -85,17 +82,17 @@
             background-color: #4CAF50;
             color: white;
         }
-        #email-signup-btn:hover:not(:disabled) {
-            background-color: #45a049;
-        }
         #email-login-btn {
             background-color: #008CBA;
             color: white;
         }
-        #email-login-btn:hover:not(:disabled) {
-            background-color: #007bb5;
+        #anonymous-login-btn {
+            background-color: #9E9E9E;
+            color: white;
         }
-
+        #anonymous-login-btn:hover:not(:disabled) {
+            background-color: #7e7e7e;
+        }
         #user-status {
             margin-bottom: 25px;
             font-weight: bold;
@@ -122,6 +119,7 @@
         <div id="login-section">
             <h2>ログイン</h2>
             <button id="google-login-btn">Googleでログイン</button>
+            <button id="anonymous-login-btn">ゲストとして使う</button>
             <hr>
             <div>
                 <input type="email" id="email-input" placeholder="メールアドレス" autocomplete="email">
@@ -135,100 +133,91 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        
-        // ====================================================================================
-        // あなたのプロジェクト `november5th-a1336` のFirebase設定 (以前動作していた情報に基づいて再構築)
-        // ====================================================================================
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            onAuthStateChanged,
+            signInAnonymously 
+        } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+        // Firebase設定
         const firebaseConfig = {
             apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
             authDomain: "november5th-a1336.firebaseapp.com",
             projectId: "november5th-a1336",
-            storageBucket: "november5th-a1336.firebasestorage.app", // 以前ご提供いただいた情報からこの形式にしています
+            storageBucket: "november5th-a1336.firebasestorage.app",
             messagingSenderId: "11537951889",
             appId: "1:11537951889:web:d783b2298fc90f88a3a330",
-            // measurementIdは元の設定になかったため、ここでは含めていません
         };
-        // ====================================================================================
 
-        // Firebaseの初期化
+        // Firebase初期化
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const googleProvider = new GoogleAuthProvider();
 
-        // HTML要素への参照を取得
+        // HTML要素取得
         const userStatusDiv = document.getElementById('user-status');
         const loginSection = document.getElementById('login-section');
         const emailInput = document.getElementById('email-input');
         const passwordInput = document.getElementById('password-input');
         const googleLoginBtn = document.getElementById('google-login-btn');
+        const anonymousLoginBtn = document.getElementById('anonymous-login-btn');
         const emailSignupBtn = document.getElementById('email-signup-btn');
         const emailLoginBtn = document.getElementById('email-login-btn');
         const errorMessageParagraph = document.getElementById('error-message');
 
-        loginSection.style.display = 'none'; // 初期状態は非表示にしてチラつきを防止
+        loginSection.style.display = 'none';
 
-        // UIの状態を管理する関数（ボタンの無効化、メッセージ表示など）
+        // UI制御
         function setUiState(isLoading, message = '') {
             emailInput.disabled = isLoading;
             passwordInput.disabled = isLoading;
             googleLoginBtn.disabled = isLoading;
+            anonymousLoginBtn.disabled = isLoading;
             emailSignupBtn.disabled = isLoading;
             emailLoginBtn.disabled = isLoading;
             userStatusDiv.textContent = message;
-            if (!isLoading) {
-                errorMessageParagraph.textContent = ''; // 処理完了時にエラーメッセージをクリア
-            }
+            if (!isLoading) errorMessageParagraph.textContent = '';
         }
 
-        // 認証状態の監視
+        // 認証状態監視
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // ログイン済みの場合：マイページへリダイレクト
                 setUiState(true, 'ログイン済み。マイページへ移動します...');
                 setTimeout(() => {
                     window.location.href = 'mypage.html';
-                }, 1500); 
+                }, 1500);
             } else {
-                // 未ログインの場合
                 setUiState(false, '未ログイン');
-                loginSection.style.display = 'block'; // フォームを表示
+                loginSection.style.display = 'block';
             }
         });
 
-        // Googleログインボタンのイベントリスナー
+        // Googleログイン
         googleLoginBtn.addEventListener('click', async () => {
             setUiState(true, 'Google認証中...');
             try {
                 await signInWithPopup(auth, googleProvider);
             } catch (error) {
-                let displayMessage = "Googleログインに失敗しました: ";
-                switch (error.code) {
-                    case 'auth/popup-closed-by-user':
-                        displayMessage = "Googleログインがキャンセルされました。";
-                        break;
-                    case 'auth/cancelled-popup-request':
-                        displayMessage = "Googleログインのポップアップリクエストがキャンセルされました。";
-                        break;
-                    case 'auth/unauthorized-domain':
-                        displayMessage = "このドメインは認証されていません。Firebaseコンソールで追加してください。";
-                        break;
-                    case 'auth/operation-not-allowed':
-                        displayMessage = "FirebaseコンソールでGoogle認証を有効にしてください。";
-                        break;
-                    case 'auth/network-request-failed':
-                        displayMessage = "ネットワーク接続の問題により失敗しました。";
-                        break;
-                    default:
-                        displayMessage += error.message;
-                }
-                errorMessageParagraph.textContent = displayMessage;
-                console.error("Googleログインエラー:", error);
-                setUiState(false, '未ログイン'); // エラー後にUIを再度有効化
+                handleError(error, "Googleログインに失敗しました");
             }
         });
 
-        // Emailでサインアップボタンのイベントリスナー
+        // 匿名ログイン（追加部分）
+        anonymousLoginBtn.addEventListener('click', async () => {
+            setUiState(true, 'ゲストとしてログイン中...');
+            try {
+                await signInAnonymously(auth);
+                console.log("匿名ログイン成功");
+            } catch (error) {
+                handleError(error, "匿名ログインに失敗しました");
+            }
+        });
+
+        // Emailサインアップ
         emailSignupBtn.addEventListener('click', async () => {
             const email = emailInput.value;
             const password = passwordInput.value;
@@ -236,38 +225,15 @@
                 errorMessageParagraph.textContent = 'メールアドレスとパスワードを入力してください。';
                 return;
             }
-
             setUiState(true, 'アカウント作成中...');
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                let displayMessage = "Emailサインアップに失敗しました: ";
-                switch (error.code) {
-                    case 'auth/email-already-in-use':
-                        displayMessage = "このメールアドレスは既に使用されています。";
-                        break;
-                    case 'auth/invalid-email':
-                        displayMessage = "メールアドレスの形式が正しくありません。";
-                        break;
-                    case 'auth/weak-password':
-                        displayMessage = "パスワードは6文字以上で設定してください。";
-                        break;
-                    case 'auth/operation-not-allowed':
-                        displayMessage = "Firebaseコンソールでメール/パスワード認証を有効にしてください。";
-                        break;
-                    case 'auth/network-request-failed':
-                        displayMessage = "ネットワーク接続の問題により失敗しました。";
-                        break;
-                    default:
-                        displayMessage += error.message;
-                }
-                errorMessageParagraph.textContent = displayMessage;
-                console.error("Emailサインアップエラー:", error);
-                setUiState(false, '未ログイン'); // エラー後にUIを再度有効化
+                handleError(error, "Emailサインアップに失敗しました");
             }
         });
 
-        // Emailでログインボタンのイベントリスナー
+        // Emailログイン
         emailLoginBtn.addEventListener('click', async () => {
             const email = emailInput.value;
             const password = passwordInput.value;
@@ -275,37 +241,34 @@
                 errorMessageParagraph.textContent = 'メールアドレスとパスワードを入力してください。';
                 return;
             }
-
             setUiState(true, 'ログイン中...');
             try {
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                let displayMessage = "Emailログインに失敗しました: ";
-                switch (error.code) {
-                    case 'auth/invalid-email':
-                        displayMessage = "メールアドレスの形式が正しくありません。";
-                        break;
-                    case 'auth/user-disabled':
-                        displayMessage = "このアカウントは無効化されています。";
-                        break;
-                    case 'auth/user-not-found':
-                    case 'auth/wrong-password':
-                        displayMessage = "メールアドレスまたはパスワードが正しくありません。";
-                        break;
-                    case 'auth/operation-not-allowed':
-                        displayMessage = "Firebaseコンソールでメール/パスワード認証を有効にしてください。";
-                        break;
-                    case 'auth/network-request-failed':
-                        displayMessage = "ネットワーク接続の問題により失敗しました。";
-                        break;
-                    default:
-                        displayMessage += error.message;
-                }
-                errorMessageParagraph.textContent = displayMessage;
-                console.error("Emailログインエラー:", error);
-                setUiState(false, '未ログイン'); // エラー後にUIを再度有効化
+                handleError(error, "Emailログインに失敗しました");
             }
         });
+
+        // 共通エラーハンドラ
+        function handleError(error, prefix = "エラー") {
+            console.error(prefix, error);
+            let displayMessage = prefix + ": ";
+            switch (error.code) {
+                case 'auth/popup-closed-by-user':
+                    displayMessage = "ログインがキャンセルされました。"; break;
+                case 'auth/invalid-email':
+                    displayMessage = "メールアドレスの形式が正しくありません。"; break;
+                case 'auth/wrong-password':
+                case 'auth/user-not-found':
+                    displayMessage = "メールアドレスまたはパスワードが正しくありません。"; break;
+                case 'auth/network-request-failed':
+                    displayMessage = "ネットワーク接続の問題により失敗しました。"; break;
+                default:
+                    displayMessage += error.message;
+            }
+            errorMessageParagraph.textContent = displayMessage;
+            setUiState(false, '未ログイン');
+        }
     </script>
 </body>
 </html>
