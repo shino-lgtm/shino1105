@@ -5,63 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Firebaseログインテスト</title>
 <style>
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    margin: 0;
-    background-color: #f0f2f5;
-    color: #333;
-}
-.container {
-    background-color: white;
-    padding: 35px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-}
-h1 { color: #222; margin-bottom: 25px; font-size: 1.8em; }
-h2 { color: #444; margin-top: 30px; margin-bottom: 20px; font-size: 1.4em; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-input[type="email"], input[type="password"] {
-    display: block;
-    width: calc(100% - 24px);
-    padding: 12px;
-    margin: 10px auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1em;
-    box-sizing: border-box;
-}
-button {
-    padding: 12px 25px;
-    margin: 8px 0;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    width: 100%;
-    box-sizing: border-box;
-    display: block;
-}
-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-button:disabled { background-color: #cccccc; cursor: not-allowed; transform: none; box-shadow: none; }
-#google-login-btn { background-color: #db4437; color: white; }
-#google-login-btn:hover:not(:disabled) { background-color: #c0392b; }
-#github-login-btn { background-color: #333; color: white; }
-#github-login-btn:hover:not(:disabled) { background-color: #111; }
-#email-signup-btn { background-color: #4CAF50; color: white; }
-#email-login-btn { background-color: #008CBA; color: white; }
-#anonymous-login-btn { background-color: #9E9E9E; color: white; }
-#anonymous-login-btn:hover:not(:disabled) { background-color: #7e7e7e; }
-#user-status { margin-bottom: 25px; font-weight: bold; color: #555; }
-.error-message { color: #d32f2f; margin-top: 15px; font-size: 0.9em; font-weight: 500; }
-hr { border: none; border-top: 1px solid #eee; margin: 25px 0; }
+body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; margin:0; background-color:#f0f2f5; color:#333; }
+.container { background-color:white; padding:35px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); text-align:center; max-width:400px; width:90%; }
+h1 { color:#222; margin-bottom:25px; font-size:1.8em; }
+h2 { color:#444; margin-top:30px; margin-bottom:20px; font-size:1.4em; border-bottom:1px solid #eee; padding-bottom:10px; }
+input[type="email"], input[type="password"] { display:block; width:calc(100% - 24px); padding:12px; margin:10px auto; border:1px solid #ddd; border-radius:6px; font-size:1em; box-sizing:border-box; }
+button { padding:12px 25px; margin:8px 0; border:none; border-radius:6px; cursor:pointer; font-size:1em; transition:background-color 0.3s ease, transform 0.2s ease; width:100%; box-sizing:border-box; display:block; }
+button:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+button:disabled { background-color:#cccccc; cursor:not-allowed; transform:none; box-shadow:none; }
+#google-login-btn { background-color:#db4437; color:white; } #google-login-btn:hover:not(:disabled) { background-color:#c0392b; }
+#github-login-btn { background-color:#333; color:white; } #github-login-btn:hover:not(:disabled) { background-color:#111; }
+#email-signup-btn { background-color:#4CAF50; color:white; } #email-login-btn { background-color:#008CBA; color:white; }
+#anonymous-login-btn { background-color:#9E9E9E; color:white; } #anonymous-login-btn:hover:not(:disabled) { background-color:#7e7e7e; }
+#error-message { color:#d32f2f; margin-top:15px; font-size:0.9em; font-weight:500; }
+#user-status { margin-bottom:25px; font-weight:bold; color:#555; }
+hr { border:none; border-top:1px solid #eee; margin:25px 0; }
 </style>
 </head>
 <body>
@@ -80,24 +38,14 @@ hr { border: none; border-top: 1px solid #eee; margin: 25px 0; }
             <button id="email-signup-btn">Emailでサインアップ</button>
             <button id="email-login-btn">Emailでログイン</button>
         </div>
-        <p id="error-message" class="error-message"></p>
+        <p id="error-message"></p>
     </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-    getAuth,
-    GoogleAuthProvider,
-    GithubAuthProvider,
-    signInWithPopup,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    signInAnonymously
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-// Firebase設定
 const firebaseConfig = {
     apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
     authDomain: "november5th-a1336.firebaseapp.com",
@@ -112,7 +60,6 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
-// HTML要素
 const userStatusDiv = document.getElementById('user-status');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
@@ -123,68 +70,41 @@ const emailSignupBtn = document.getElementById('email-signup-btn');
 const emailLoginBtn = document.getElementById('email-login-btn');
 const errorMessageParagraph = document.getElementById('error-message');
 
-// UI状態更新
 function setUiState(isLoading, message='') {
-    [emailInput, passwordInput, googleLoginBtn, githubLoginBtn, anonymousLoginBtn, emailSignupBtn, emailLoginBtn].forEach(el => el.disabled = isLoading);
+    [emailInput, passwordInput, googleLoginBtn, githubLoginBtn, anonymousLoginBtn, emailSignupBtn, emailLoginBtn].forEach(el=>el.disabled=isLoading);
     userStatusDiv.textContent = message || '未ログイン';
-    if(!isLoading) errorMessageParagraph.textContent = '';
+    if(!isLoading) errorMessageParagraph.textContent='';
 }
 
-// 認証状態監視
 onAuthStateChanged(auth, (user)=>{
     if(user){
         userStatusDiv.textContent = 'ログイン済み: ' + (user.email || 'ゲスト');
         console.log('Logged in user:', user);
-        // window.location.href='mypage.html'; // 必要に応じて有効化
+        window.location.href='mypage.html';
     } else {
         setUiState(false,'未ログイン');
     }
 });
 
-// ログインイベント
-googleLoginBtn.addEventListener('click', async ()=>{
-    setUiState(true,'Google認証中...');
-    try{ await signInWithPopup(auth, googleProvider); } 
-    catch(e){ handleError(e,"Googleログインに失敗しました"); }
-});
+googleLoginBtn.addEventListener('click', async ()=>{setUiState(true,'Google認証中...'); try{await signInWithPopup(auth, googleProvider);} catch(e){handleError(e,'Googleログイン失敗');}});
+githubLoginBtn.addEventListener('click', async ()=>{setUiState(true,'GitHub認証中...'); try{await signInWithPopup(auth, githubProvider);} catch(e){handleError(e,'GitHubログイン失敗');}});
+anonymousLoginBtn.addEventListener('click', async ()=>{setUiState(true,'ゲストログイン中...'); try{await signInAnonymously(auth);} catch(e){handleError(e,'匿名ログイン失敗');}});
+emailSignupBtn.addEventListener('click', async ()=>{const email=emailInput.value,password=passwordInput.value; if(!email||!password){errorMessageParagraph.textContent='メールとパスワードを入力'; return;} setUiState(true,'アカウント作成中...'); try{await createUserWithEmailAndPassword(auth,email,password);} catch(e){handleError(e,'サインアップ失敗');}});
+emailLoginBtn.addEventListener('click', async ()=>{const email=emailInput.value,password=passwordInput.value; if(!email||!password){errorMessageParagraph.textContent='メールとパスワードを入力'; return;} setUiState(true,'ログイン中...'); try{await signInWithEmailAndPassword(auth,email,password);} catch(e){handleError(e,'ログイン失敗');}});
 
-githubLoginBtn.addEventListener('click', async ()=>{
-    setUiState(true,'GitHub認証中...');
-    try{ await signInWithPopup(auth, githubProvider); } 
-    catch(e){ handleError(e,"GitHubログインに失敗しました"); }
-});
-
-anonymousLoginBtn.addEventListener('click', async ()=>{
-    setUiState(true,'ゲストとしてログイン中...');
-    try{ await signInAnonymously(auth); } 
-    catch(e){ handleError(e,"匿名ログインに失敗しました"); }
-});
-
-emailSignupBtn.addEventListener('click', async ()=>{
-    const email=emailInput.value, password=passwordInput.value;
-    if(!email||!password){ errorMessageParagraph.textContent='メールアドレスとパスワードを入力してください。'; return; }
-    setUiState(true,'アカウント作成中...');
-    try{ await createUserWithEmailAndPassword(auth,email,password); } 
-    catch(e){ handleError(e,"Emailサインアップに失敗しました"); }
-});
-
-emailLoginBtn.addEventListener('click', async ()=>{
-    const email=emailInput.value, password=passwordInput.value;
-    if(!email||!password){ errorMessageParagraph.textContent='メールアドレスとパスワードを入力してください。'; return; }
-    setUiState(true,'ログイン中...');
-    try{ await signInWithEmailAndPassword(auth,email,password); } 
-    catch(e){ handleError(e,"Emailログインに失敗しました"); }
-});
-
-// エラーハンドリング
-function handleError(error,prefix="エラー"){
+function handleError(error,prefix){
     console.error(prefix,error);
-    let displayMessage=prefix+": ";
+    let msg=prefix+': ';
     switch(error.code){
-        case 'auth/popup-closed-by-user': displayMessage="ログインがキャンセルされました。"; break;
-        case 'auth/invalid-email': displayMessage="メールアドレスの形式が正しくありません。"; break;
-        case 'auth/wrong-password':
-        case 'auth/user-not-found': displayMessage="メールアドレスまたはパスワードが正しくありません。"; break;
-        case 'auth/network-request-failed': displayMessage="ネットワーク接続の問題により失敗しました。"; break;
-        default: displayMessage+=error.message;
+        case 'auth/popup-closed-by-user': msg='ログインキャンセル'; break;
+        case 'auth/invalid-email': msg='メール形式が不正'; break;
+        case 'auth/wrong-password': case 'auth/user-not-found': msg='メールかパスワードが不正'; break;
+        case 'auth/network-request-failed': msg='ネットワークエラー'; break;
+        default: msg+=error.message;
     }
+    errorMessageParagraph.textContent=msg;
+    setUiState(false,'未ログイン');
+}
+</script>
+</body>
+</html>
