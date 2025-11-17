@@ -92,8 +92,6 @@
             GoogleAuthProvider, 
             GithubAuthProvider, 
             signInWithPopup, 
-            signInWithRedirect,
-            getRedirectResult,
             createUserWithEmailAndPassword, 
             signInWithEmailAndPassword, 
             onAuthStateChanged,
@@ -139,11 +137,6 @@
             if (!isLoading) errorMessageParagraph.textContent = '';
         }
 
-        // GitHubリダイレクト結果
-        getRedirectResult(auth).catch(error => {
-            if (error) handleError(error, "GitHubログインに失敗しました");
-        });
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 setUiState(true, 'ログイン済み。マイページへ移動します...');
@@ -162,7 +155,7 @@
 
         githubLoginBtn.addEventListener('click', async () => {
             setUiState(true, 'GitHub認証中...');
-            try { await signInWithRedirect(auth, githubProvider); } 
+            try { await signInWithPopup(auth, githubProvider); } 
             catch (error) { handleError(error, "GitHubログインに失敗しました"); }
         });
 
