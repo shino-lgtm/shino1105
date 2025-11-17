@@ -1,133 +1,54 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マイページ</title>
-    <style>
-        /* 基本的なスタイリング */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #e0f7fa;
-            color: #00796b;
-            text-align: center;
-        }
-        .container {
-            background-color: white;
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 90%;
-        }
-        h1 {
-            color: #004d40;
-            margin-bottom: 20px;
-            font-size: 2em;
-        }
-        p {
-            margin: 10px 0;
-            font-size: 1.1em;
-            line-height: 1.6;
-        }
-        strong {
-            color: #004d40;
-        }
-        button {
-            padding: 12px 30px;
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1.1em;
-            margin-top: 30px;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-        button:hover {
-            background-color: #b71c1c;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .loading-message {
-            font-style: italic;
-            color: #777;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マイページ</title>
+<style>
+body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; padding:40px; background-color:#f0f2f5; }
+.container { max-width:600px; margin:auto; background:white; padding:30px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+button { padding:12px 20px; margin-top:20px; border:none; border-radius:6px; background-color:#f44336; color:white; cursor:pointer; font-size:1em; }
+button:hover { background-color:#d32f2f; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>ようこそ、マイページへ！</h1>
-        <p id="welcomeMessage" class="loading-message">ユーザー情報を読み込み中...</p>
-        <p id="userEmail"></p>
-        <p id="userName"></p>
-        <p id="userUid"></p>
-        <button id="logoutButton">ログアウト</button>
-    </div>
+<div class="container">
+    <h1>マイページ</h1>
+    <p id="user-info">ユーザー情報を取得中...</p>
+    <button id="logout-btn">ログアウト</button>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-        // ====================================================================================
-        // あなたのプロジェクト `november5th-a1336` のFirebase設定 (以前動作していた情報に基づいて再構築)
-        // ====================================================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
-            authDomain: "november5th-a1336.firebaseapp.com",
-            projectId: "november5th-a1336",
-            storageBucket: "november5th-a1336.firebasestorage.app", // 以前ご提供いただいた情報からこの形式にしています
-            messagingSenderId: "11537951889",
-            appId: "1:11537951889:web:d783b2298fc90f88a3a330",
-            // measurementIdは元の設定になかったため、ここでは含めていません
-        };
-        // ====================================================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
+    authDomain: "november5th-a1336.firebaseapp.com",
+    projectId: "november5th-a1336",
+    storageBucket: "november5th-a1336.firebasestorage.app",
+    messagingSenderId: "11537951889",
+    appId: "1:11537951889:web:d783b2298fc90f88a3a330",
+};
 
-        // Firebaseの初期化
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const userInfoP = document.getElementById('user-info');
+const logoutBtn = document.getElementById('logout-btn');
 
-        // HTML要素への参照を取得
-        const welcomeMessageElement = document.getElementById("welcomeMessage");
-        const userEmailElement = document.getElementById("userEmail");
-        const userNameElement = document.getElementById("userName");
-        const userUidElement = document.getElementById("userUid");
-        const logoutButton = document.getElementById("logoutButton");
+onAuthStateChanged(auth, (user)=>{
+    if(user){
+        userInfoP.textContent = `ログイン中: ${user.email || 'ゲスト'} (UID: ${user.uid})`;
+    } else {
+        userInfoP.textContent = '未ログイン';
+        setTimeout(()=>{ window.location.href='index.html'; },1000);
+    }
+});
 
-        // ログアウトボタンのイベントリスナー
-        logoutButton.addEventListener("click", async () => {
-            try {
-                await signOut(auth);
-                // ログアウト成功後、index.htmlへリダイレクト
-                window.location.href = "index.html";
-            } catch (error) {
-                console.error("ログアウトエラー:", error);
-                alert("ログアウトに失敗しました: " + error.message);
-            }
-        });
-
-        // 認証状態の変更を監視し、ユーザー情報を表示またはリダイレクト
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // ユーザーがログインしている場合
-                welcomeMessageElement.textContent = `こんにちは、${user.displayName || user.email.split('@')[0]} さん！`;
-                userEmailElement.innerHTML = `<strong>メールアドレス:</strong> ${user.email}`;
-                userNameElement.innerHTML = `<strong>表示名:</strong> ${user.displayName || "なし"}`;
-                userUidElement.innerHTML = `<strong>ユーザーID (UID):</strong> ${user.uid}`;
-            } else {
-                // ユーザーがログインしていない場合、ログインページへリダイレクト
-                welcomeMessageElement.textContent = "未認証ユーザーです。ログインページへ移動します...";
-                setTimeout(() => {
-                    window.location.href = "index.html";
-                }, 1500);
-            }
-        });
-    </script>
+logoutBtn.addEventListener('click', async ()=>{
+    await signOut(auth);
+    window.location.href='index.html';
+});
+</script>
 </body>
 </html>
