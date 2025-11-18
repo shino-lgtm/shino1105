@@ -46,7 +46,6 @@ hr { border:none; border-top:1px solid #eee; margin:25px 0; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signInWithRedirect, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signInAnonymously, getRedirectResult } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-// Firebase 設定（Firebase Hosting 用）
 const firebaseConfig = {
     apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
     authDomain: "november5th-a1336.firebaseapp.com",
@@ -81,28 +80,29 @@ function handleError(error,prefix){
     console.error(prefix,error);
     let msg=prefix+': ';
     switch(error.code){
-        case 'auth/popup-closed-by-user': msg='ログインがユーザーによってキャンセルされました。'; break;
+        case 'auth/popup-closed-by-user': msg='ログインがキャンセルされました。'; break;
         case 'auth/invalid-email': msg='メールアドレスの形式が不正です。'; break;
         case 'auth/wrong-password':
         case 'auth/user-not-found': msg='メールアドレスまたはパスワードが正しくありません。'; break;
         case 'auth/network-request-failed': msg='ネットワークエラーが発生しました。'; break;
         case 'auth/cancelled-popup-request': msg='ポップアップ要求がキャンセルされました。'; break;
-        case 'auth/redirect-cancelled-by-user': msg='リダイレクトログインがユーザーによってキャンセルされました。'; break;
+        case 'auth/redirect-cancelled-by-user': msg='リダイレクトログインがキャンセルされました。'; break;
         default: msg+=error.message;
     }
     errorMessageParagraph.textContent=msg;
     setUiState(false,'未ログイン');
 }
 
-// ページ読み込み時にリダイレクト結果を処理
+// ページ読み込み時に必ずリダイレクト結果を処理
 getRedirectResult(auth)
   .then(result=>{
     if(result && result.user){
-      console.log('リダイレクトによるサインイン成功:', result.user.email || 'ゲスト');
+      console.log('GitHubサインイン成功:', result.user.email || 'ゲスト');
+      window.location.href='mypage.html';
     }
   })
   .catch(error=>{
-    handleError(error,'リダイレクトログイン処理中にエラー');
+    handleError(error,'リダイレクト処理中にエラー');
   });
 
 // 認証状態監視
@@ -115,7 +115,7 @@ onAuthStateChanged(auth,user=>{
     }
 });
 
-// Googleログイン
+// Googleログイン（ポップアップ）
 googleLoginBtn.addEventListener('click',async()=>{
     setUiState(true,'Google認証中...');
     try{await signInWithPopup(auth,googleProvider);}catch(e){handleError(e,'Googleログイン失敗');}
