@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Firebaseログインテスト</title>
 <style>
-/* スタイル部分は変更ありません */
 body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; margin:0; background-color:#f0f2f5; color:#333; }
 .container { background-color:white; padding:35px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); text-align:center; max-width:400px; width:90%; }
 h1 { color:#222; margin-bottom:25px; font-size:1.8em; }
@@ -45,9 +44,9 @@ hr { border:none; border-top:1px solid #eee; margin:25px 0; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-// getRedirectResult を追加し、signInWithPopup の代わりに signInWithRedirect を使用
 import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signInWithRedirect, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signInAnonymously, getRedirectResult } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
+// Firebase 設定（Firebase Hosting 用）
 const firebaseConfig = {
     apiKey: "AIzaSyBH8EPKOwIBIMR16Z7PTECc2Lp0Y5cfkHQ",
     authDomain: "november5th-a1336.firebaseapp.com",
@@ -69,11 +68,11 @@ const googleLoginBtn = document.getElementById('google-login-btn');
 const githubLoginBtn = document.getElementById('github-login-btn');
 const anonymousLoginBtn = document.getElementById('anonymous-login-btn');
 const emailSignupBtn = document.getElementById('email-signup-btn');
-const emailLoginBtn = document.getElementById('email-login-btn'); // 修正: document.getElementById('email-login-btn')
+const emailLoginBtn = document.getElementById('email-login-btn');
 const errorMessageParagraph = document.getElementById('error-message');
 
-function setUiState(isLoading, message='') {
-    [emailInput, passwordInput, googleLoginBtn, githubLoginBtn, anonymousLoginBtn, emailSignupBtn, emailLoginBtn].forEach(el=>el.disabled=isLoading);
+function setUiState(isLoading,message=''){
+    [emailInput,passwordInput,googleLoginBtn,githubLoginBtn,anonymousLoginBtn,emailSignupBtn,emailLoginBtn].forEach(el=>el.disabled=isLoading);
     userStatusDiv.textContent = message || '未ログイン';
     if(!isLoading) errorMessageParagraph.textContent='';
 }
@@ -87,54 +86,68 @@ function handleError(error,prefix){
         case 'auth/wrong-password':
         case 'auth/user-not-found': msg='メールアドレスまたはパスワードが正しくありません。'; break;
         case 'auth/network-request-failed': msg='ネットワークエラーが発生しました。'; break;
-        case 'auth/cancelled-popup-request': msg='ポップアップ要求がキャンセルされました。'; break; // 新規追加
-        case 'auth/redirect-cancelled-by-user': msg='リダイレクトログインがユーザーによってキャンセルされました。'; break; // 新規追加
+        case 'auth/cancelled-popup-request': msg='ポップアップ要求がキャンセルされました。'; break;
+        case 'auth/redirect-cancelled-by-user': msg='リダイレクトログインがユーザーによってキャンセルされました。'; break;
         default: msg+=error.message;
     }
     errorMessageParagraph.textContent=msg;
     setUiState(false,'未ログイン');
 }
 
-// === 新規追加: ページ読み込み時にリダイレクト結果を処理する ===
-// これは、ユーザーが認証後にリダイレクトされて戻ってきたかどうかを確認します
+// ページ読み込み時にリダイレクト結果を処理
 getRedirectResult(auth)
-  .then((result) => {
-    if (result && result.user) {
+  .then(result=>{
+    if(result && result.user){
       console.log('リダイレクトによるサインイン成功:', result.user.email || 'ゲスト');
-      // onAuthStateChanged リスナーがユーザーの状態とリダイレクトを処理します
     }
   })
-  .catch((error) => {
-    handleError(error, 'リダイレクトログイン処理中にエラー');
+  .catch(error=>{
+    handleError(error,'リダイレクトログイン処理中にエラー');
   });
 
-onAuthStateChanged(auth, (user)=>{
+// 認証状態監視
+onAuthStateChanged(auth,user=>{
     if(user){
         userStatusDiv.textContent = 'ログイン済み: ' + (user.email || 'ゲスト');
-        console.log('Logged in user:', user);
         window.location.href='mypage.html';
     } else {
         setUiState(false,'未ログイン');
     }
 });
 
-// Googleログインは signInWithPopup のまま
-googleLoginBtn.addEventListener('click', async ()=>{setUiState(true,'Google認証中...'); try{await signInWithPopup(auth, googleProvider);} catch(e){handleError(e,'Googleログイン失敗');}});
-
-// === 変更: GitHubログインは signInWithRedirect を使用 ===
-githubLoginBtn.addEventListener('click', async ()=>{
-    setUiState(true,'GitHub認証中...');
-    try{
-        await signInWithRedirect(auth, githubProvider); // これにより、ユーザーは現在のページからリダイレクトされます
-    } catch(e){
-        // この catch ブロックは、リダイレクトの「開始」に失敗した場合にのみ実行されます
-        handleError(e,'GitHubリダイレクト開始失敗');
-    }
+// Googleログイン
+googleLoginBtn.addEventListener('click',async()=>{
+    setUiState(true,'Google認証中...');
+    try{await signInWithPopup(auth,googleProvider);}catch(e){handleError(e,'Googleログイン失敗');}
 });
 
-anonymousLoginBtn.addEventListener('click', async ()=>{setUiState(true,'ゲストログイン中...'); try{await signInAnonymously(auth);} catch(e){handleError(e,'匿名ログイン失敗');}});
-emailSignupBtn.addEventListener('click', async ()=>{const email=emailInput.value,password=passwordInput.value; if(!email||!password){errorMessageParagraph.textContent='メールとパスワードを入力してください。'; return;} setUiState(true,'アカウント作成中...'); try{await createUserWithEmailAndPassword(auth,email,password);} catch(e){handleError(e,'サインアップ失敗');}});
-emailLoginBtn.addEventListener('click', async ()=>{const email=emailInput.value,password=passwordInput.value; if(!email||!password){errorMessageParagraph.textContent='メールとパスワードを入力してください。'; return;} setUiState(true,'ログイン中...'); try{await signInWithEmailAndPassword(auth,email,password);} catch(e){handleError(e,'ログイン失敗');}});
+// GitHubログイン（リダイレクト方式）
+githubLoginBtn.addEventListener('click',async()=>{
+    setUiState(true,'GitHub認証中...');
+    try{await signInWithRedirect(auth,githubProvider);}catch(e){handleError(e,'GitHubリダイレクト開始失敗');}
+});
+
+// 匿名ログイン
+anonymousLoginBtn.addEventListener('click',async()=>{
+    setUiState(true,'ゲストログイン中...');
+    try{await signInAnonymously(auth);}catch(e){handleError(e,'匿名ログイン失敗');}
+});
+
+// Emailサインアップ
+emailSignupBtn.addEventListener('click',async()=>{
+    const email=emailInput.value,password=passwordInput.value;
+    if(!email||!password){errorMessageParagraph.textContent='メールとパスワードを入力してください。'; return;}
+    setUiState(true,'アカウント作成中...');
+    try{await createUserWithEmailAndPassword(auth,email,password);}catch(e){handleError(e,'サインアップ失敗');}
+});
+
+// Emailログイン
+emailLoginBtn.addEventListener('click',async()=>{
+    const email=emailInput.value,password=passwordInput.value;
+    if(!email||!password){errorMessageParagraph.textContent='メールとパスワードを入力してください。'; return;}
+    setUiState(true,'ログイン中...');
+    try{await signInWithEmailAndPassword(auth,email,password);}catch(e){handleError(e,'ログイン失敗');}
+});
 </script>
 </body>
 </html>
